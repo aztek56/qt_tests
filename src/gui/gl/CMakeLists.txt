@@ -1,0 +1,1 @@
+ADD_SOURCES(core_SRCS ON)
