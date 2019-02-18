@@ -1,3 +1,3 @@
-ADD_SUBDIR(gl)
+ADD_SUBDIR(canvas)
 
 ADD_SOURCES(core_SRCS ON)

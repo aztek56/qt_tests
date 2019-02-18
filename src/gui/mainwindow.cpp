@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "gl/glwidget.h"
+#include "canvas/glwidget.h"
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    ui->centralWidget->setMinimumSize(1024,1024);
     glWidget = new GLWidget;
 
     ui->mainLayout->addWidget(glWidget);
