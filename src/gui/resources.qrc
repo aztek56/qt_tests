@@ -1,5 +1,12 @@
 <RCC>
     <qresource prefix="/">
-        <file>resources/add.png</file>
+        <file>resources/quit.png</file>
+        <file>resources/stop.png</file>
+        <!-- vertex shaders -->
+        <file>shaders/logoShaderSource.vert</file>
+        <file>shaders/logoShaderSourceCore.vert</file>
+        <!-- fragment shaders -->
+        <file>shaders/logoShaderSource.frag</file>
+        <file>shaders/logoShaderSourceCore.frag</file>
     </qresource>
 </RCC>

@@ -2,6 +2,8 @@
 
 # Generate the list of folders containing .h files
 HEADER_DIRECTORIES(SYS_HDR_PATHS)
+include_directories(${SYS_HDR_PATHS})
+
 #ADD_SUBDIR(<Directory>) # remember to use the core_SRCS to add sources
 ADD_SOURCES(core_SRCS OFF)
 ADD_SUBDIR(gui)
@@ -19,7 +21,7 @@ FORM_FILES(QT_FORMS)
 ###########################################################
 #   Find the .qrc files from the whole project
 ###########################################################
-#RESOURCE_FILES(QT_RESOURCES)
+RESOURCE_FILES(QT_RESOURCES)
 #set(QT_RESOURCES "")
 
 ###########################################################
@@ -35,9 +37,6 @@ list(APPEND FRAME_LIBS Qt5::Widgets)
 qt5_wrap_cpp(MOC_HEADERS ${QT_HEADERS})
 qt5_wrap_ui(UIC_SOURCES ${QT_FORMS})
 qt5_add_resources(RCC_SOURCES ${QT_RESOURCES})
-
-include_directories(${SYS_HDR_PATHS})
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
 #qt5_use_modules(${EXECUTABLE} Core Widgets Gui)
 

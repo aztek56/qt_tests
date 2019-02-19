@@ -14,6 +14,14 @@
 
 bool GLWidget::m_transparent = false;
 
+static const char *vertexShaderSourceCore = ":/shaders/logoShaderSourceCore.vert";
+
+static const char *fragmentShaderSourceCore = ":/shaders/logoShaderSourceCore.frag";
+
+static const char *vertexShaderSource = ":/shaders/logoShaderSource.vert";
+
+static const char *fragmentShaderSource = ":/shaders/logoShaderSource.frag";
+
 GLWidget::GLWidget(QWidget *parent)
         : QOpenGLWidget(parent),
           m_xRot(0),
@@ -96,67 +104,6 @@ void GLWidget::cleanup()
     doneCurrent();
 }
 
-static const char *vertexShaderSourceCore =
-        "#version 150\n"
-        "in vec4 vertex;\n"
-        "in vec3 normal;\n"
-        "in vec3 color;\n"
-        "out vec3 vColor;\n"
-        "out vec3 vert;\n"
-        "out vec3 vertNormal;\n"
-        "uniform mat4 worldToView ;\n"
-        "uniform mat4 modelToWorld;\n"
-        "uniform mat3 normalMatrix;\n"
-        "void main() {\n"
-        "   vColor = color;\n"
-        "   vert = vertex.xyz;\n"
-        "   vertNormal = normalMatrix * normal;\n"
-        "   gl_Position = worldToView  * modelToWorld * vertex;\n"
-        "}\n";
-
-static const char *fragmentShaderSourceCore =
-        "#version 150\n"
-        "in highp vec3 vColor;\n"
-        "in highp vec3 vert;\n"
-        "in highp vec3 vertNormal;\n"
-        "out highp vec4 fragColor;\n"
-        "uniform highp vec3 lightPos;\n"
-        "void main() {\n"
-        "   highp vec3 L = normalize(lightPos - vert);\n"
-        "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
-        "   highp vec3 col = clamp(vColor * 0.2 + vColor * 0.8 * NL, 0.0, 1.0);\n"
-        "   fragColor = vec4(col, 1.0);\n"
-        "}\n";
-
-static const char *vertexShaderSource =
-        "attribute vec4 vertex;\n"
-        "attribute vec3 normal;\n"
-        "attribute vec3 color;\n"
-        "varying vec3 vColor;\n"
-        "varying vec3 vert;\n"
-        "varying vec3 vertNormal;\n"
-        "uniform mat4 worldToView ;\n"
-        "uniform mat4 modelToWorld;\n"
-        "uniform mat3 normalMatrix;\n"
-        "void main() {\n"
-        "   vColor = color;\n"
-        "   vert = vertex.xyz;\n"
-        "   vertNormal = normalMatrix * normal;\n"
-        "   gl_Position = worldToView  * modelToWorld * vertex;\n"
-        "}\n";
-
-static const char *fragmentShaderSource =
-        "varying highp vec3 vColor;\n"
-        "varying highp vec3 vert;\n"
-        "varying highp vec3 vertNormal;\n"
-        "uniform highp vec3 lightPos;\n"
-        "void main() {\n"
-        "   highp vec3 L = normalize(lightPos - vert);\n"
-        "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
-        "   highp vec3 col = clamp(vColor * 0.2 + vColor * 0.8 * NL, 0.0, 1.0);\n"
-        "   gl_FragColor = vec4(col, 1.0);\n"
-        "}\n";
-
 void GLWidget::initializeGL()
 {
     // In this example the widget's corresponding top-level window can change
@@ -173,8 +120,8 @@ void GLWidget::initializeGL()
     glClearColor(0, 0, 0, m_transparent ? 0 : 1);
 
     m_program = new QOpenGLShaderProgram;
-    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex,  m_core ? vertexShaderSourceCore : vertexShaderSource);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment,m_core ? fragmentShaderSourceCore : fragmentShaderSource);
+    m_program->addShaderFromSourceFile(QOpenGLShader::Vertex,  m_core ? vertexShaderSourceCore : vertexShaderSource);
+    m_program->addShaderFromSourceFile(QOpenGLShader::Fragment,m_core ? fragmentShaderSourceCore : fragmentShaderSource);
     m_program->bindAttributeLocation("vertex", 0);
     m_program->bindAttributeLocation("normal", 1);
     m_program->bindAttributeLocation("color",  2);
