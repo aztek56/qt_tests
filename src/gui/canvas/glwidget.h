@@ -66,7 +66,7 @@ private:
     // Shader Information
     int u_modelToWorld;
     int u_worldToView;
-    //Transform3D m_transform;
+    Transform3D m_transform;
 
     int m_normalMatrixLoc;
     int m_lightPosLoc;

@@ -6,11 +6,11 @@
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
 #include <QCoreApplication>
+#include <iostream>
 #include <math.h>
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
 #include "transform3D.h"
-
 
 bool GLWidget::m_transparent = false;
 
@@ -29,7 +29,7 @@ GLWidget::GLWidget(QWidget *parent)
           m_zRot(0),
           m_program(0)
 {
-    //m_transform.translate(0.0f, 0.0f, -5.0f);
+    m_transform.translate(0.0f, 0.0f, -5.0f);
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
     // --transparent causes the clear color to be transparent. Therefore, on systems that
     // support it, the widget will become transparent apart from the logo.
@@ -40,61 +40,11 @@ GLWidget::GLWidget(QWidget *parent)
     }
 }
 
-GLWidget::~GLWidget()
-{
+GLWidget::~GLWidget() {
     cleanup();
 }
 
-QSize GLWidget::minimumSizeHint() const
-{
-    return QSize(50, 50);
-}
-
-QSize GLWidget::sizeHint() const
-{
-    return QSize(400, 400);
-}
-
-static void qNormalizeAngle(int &angle)
-{
-    while (angle < 0)
-        angle += 360 * 16;
-    while (angle > 360 * 16)
-        angle -= 360 * 16;
-}
-
-void GLWidget::setXRotation(int angle)
-{
-    qNormalizeAngle(angle);
-    if (angle != m_xRot) {
-        m_xRot = angle;
-        emit xRotationChanged(angle);
-        update();
-    }
-}
-
-void GLWidget::setYRotation(int angle)
-{
-    qNormalizeAngle(angle);
-    if (angle != m_yRot) {
-        m_yRot = angle;
-        emit yRotationChanged(angle);
-        update();
-    }
-}
-
-void GLWidget::setZRotation(int angle)
-{
-    qNormalizeAngle(angle);
-    if (angle != m_zRot) {
-        m_zRot = angle;
-        emit zRotationChanged(angle);
-        update();
-    }
-}
-
-void GLWidget::cleanup()
-{
+void GLWidget::cleanup() {
     if (m_program == nullptr)
         return;
     makeCurrent();
@@ -104,8 +54,7 @@ void GLWidget::cleanup()
     doneCurrent();
 }
 
-void GLWidget::initializeGL()
-{
+void GLWidget::initializeGL() {
     // In this example the widget's corresponding top-level window can change
     // several times during the widget's lifetime. Whenever this happens, the
     // QOpenGLWidget's associated context is destroyed and a new one is created.
@@ -159,8 +108,7 @@ void GLWidget::initializeGL()
     m_program->release();
 }
 
-void GLWidget::setupVertexAttribs()
-{
+void GLWidget::setupVertexAttribs() {
     m_objectVbo.bind();
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
     f->glEnableVertexAttribArray(0);    // position
@@ -172,16 +120,15 @@ void GLWidget::setupVertexAttribs()
     m_objectVbo.release();
 }
 
-void GLWidget::paintGL()
-{
+void GLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
-    m_world.setToIdentity();
-    m_world.rotate(180.0f - (m_xRot / 16.0f), 1, 0, 0);
-    m_world.rotate(m_yRot / 16.0f, 0, 1, 0);
-    m_world.rotate(m_zRot / 16.0f, 0, 0, 1);
+//    m_world.setToIdentity();
+//    m_world.rotate(180.0f - (m_xRot / 16.0f), 1, 0, 0);
+//    m_world.rotate(m_yRot / 16.0f, 0, 1, 0);
+//    m_world.rotate(m_zRot / 16.0f, 0, 0, 1);
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
     m_program->bind();
@@ -195,7 +142,8 @@ void GLWidget::paintGL()
 //    }
 
     m_program->setUniformValue(u_worldToView, m_projection);
-    m_program->setUniformValue(u_modelToWorld, m_camera * m_world);
+    //m_program->setUniformValue(u_modelToWorld, m_camera * m_world);
+    m_program->setUniformValue(u_modelToWorld, m_transform.toMatrix());
     QMatrix3x3 normalMatrix = m_world.normalMatrix();
     m_program->setUniformValue(m_normalMatrixLoc, normalMatrix);
     glDrawArrays(GL_TRIANGLES, 0, m_logo.vertexCount());
@@ -203,35 +151,88 @@ void GLWidget::paintGL()
     m_program->release();
 }
 
-void GLWidget::resizeGL(int w, int h)
-{
+void GLWidget::resizeGL(int w, int h) {
     m_projection.setToIdentity();
     m_projection.perspective(45.0f, GLfloat(w) / h, 0.01f, 100.0f);
 }
 
 
-void GLWidget::mousePressEvent(QMouseEvent *event)
-{
+void GLWidget::mousePressEvent(QMouseEvent *event) {
     m_lastPos = event->pos();
 }
 
-void GLWidget::mouseMoveEvent(QMouseEvent *event)
-{
+void GLWidget::mouseMoveEvent(QMouseEvent *event) {
     int dx = event->x() - m_lastPos.x();
     int dy = event->y() - m_lastPos.y();
+    Qt::MouseButtons mouseButtons = event->buttons();
 
-    if (event->buttons() & Qt::LeftButton) {
+    if(mouseButtons & Qt::LeftButton) {
         setXRotation(m_xRot + 8 * dy);
         setYRotation(m_yRot + 8 * dx);
-    } else if (event->buttons() & Qt::RightButton) {
-        setXRotation(m_xRot + 8 * dy);
-        setZRotation(m_zRot + 8 * dx);
+        //setZRotation(m_zRot + 8 * dx);
+        std::cout << m_xRot << std::endl;
+    } else if(mouseButtons & Qt::RightButton) {
+        float trans = m_transform.translation().z() + (dy * 0.005f);
+
+        m_transform.translate(dx, dy, trans);
+        qDebug() << m_transform;
+        //update();
+    } else if(mouseButtons & Qt::MidButton) {
+        float scale = -std::min(m_transform.translation().z(), 0.0f) * 0.001f + 0.000025f;
+        m_transform.scale(scale);
+
     }
+    update();
     m_lastPos = event->pos();
 }
 
-void GLWidget::printVersionInformation()
-{
+
+QSize GLWidget::minimumSizeHint() const {
+    return QSize(50, 50);
+}
+
+QSize GLWidget::sizeHint() const {
+    return QSize(400, 400);
+}
+
+static void qNormalizeAngle(int &angle) {
+    while (angle < 0)
+        angle += 360 * 16;
+    while (angle > 360 * 16)
+        angle -= 360 * 16;
+}
+
+void GLWidget::setXRotation(int angle) {
+    qNormalizeAngle(angle);
+    if (angle != m_xRot) {
+        m_xRot = angle;
+        m_transform.rotate(m_xRot, QVector3D(1.0f, 0.0f, 0.0f));
+        emit xRotationChanged(angle);
+        //update();
+    }
+}
+
+void GLWidget::setYRotation(int angle) {
+    qNormalizeAngle(angle);
+    if (angle != m_yRot) {
+        m_yRot = angle;
+        m_transform.rotate(m_yRot, QVector3D(0.0f, 1.0f, 0.0f));
+        emit yRotationChanged(angle);
+        //update();
+    }
+}
+
+void GLWidget::setZRotation(int angle) {
+    qNormalizeAngle(angle);
+    if (angle != m_zRot) {
+        m_zRot = angle;
+        m_transform.rotate(m_zRot, QVector3D(0.0f, 0.0f, 1.0f));
+        emit zRotationChanged(angle);
+        //update();
+    }
+}
+
+void GLWidget::printVersionInformation() {
     QString glType;
     QString glVersion;
     QString glProfile;
@@ -242,8 +243,7 @@ void GLWidget::printVersionInformation()
 
     // Get Profile Information
 #define CASE(c) case QSurfaceFormat::c: glProfile = #c; break
-    switch (format().profile())
-    {
+    switch (format().profile()) {
         CASE(NoProfile);
         CASE(CoreProfile);
         CASE(CompatibilityProfile);
